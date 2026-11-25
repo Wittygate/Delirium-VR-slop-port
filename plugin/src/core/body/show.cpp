@@ -49,12 +49,24 @@ namespace delirium
 		std::mutex              g_showLock;
 		std::vector<ShownPose*> g_shown;
 
+#if defined(EXCLUSIVE_SKYRIM_FLAT)
 		::CRITICAL_SECTION* SkinLock(RE::NiSkinInstance* a_skin) { return reinterpret_cast<::CRITICAL_SECTION*>(&a_skin->lock); }
+#else
+		// VR PORT TODO: Skyrim VR's NiSkinInstance has no lock (offset 0x60 is something else), so there is nothing to
+		// hold against the render thread. Until a VR-safe sync point is found, publishing does not lock (may tear a frame).
+		// SE/AE in a multi-runtime build: the lock is still at 0x60 there.
+		::CRITICAL_SECTION* SkinLock(RE::NiSkinInstance* a_skin) { return reinterpret_cast<::CRITICAL_SECTION*>(reinterpret_cast<std::uint8_t*>(a_skin) + 0x60); }
+#endif
 
 		// her skins all at once, never waiting: false (none held) while a render thread builds one's matrices (it holds
 		// the skin's lock for that)
 		bool LockSkins(const ShownPose& a_p)
 		{
+#if !defined(EXCLUSIVE_SKYRIM_FLAT)
+			if (REL::Module::IsVR()) {
+				return true;
+			}
+#endif
 			std::size_t n = 0;
 			while (n < a_p.skins.size() && TryEnterCriticalSection(SkinLock(a_p.skins[n].get()))) {
 				++n;
@@ -69,6 +81,11 @@ namespace delirium
 		}
 		void UnlockSkins(const ShownPose& a_p)
 		{
+#if !defined(EXCLUSIVE_SKYRIM_FLAT)
+			if (REL::Module::IsVR()) {
+				return;
+			}
+#endif
 			for (auto& s : a_p.skins) {
 				LeaveCriticalSection(SkinLock(s.get()));
 			}
