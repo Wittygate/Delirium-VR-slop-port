@@ -160,6 +160,9 @@ namespace delirium
 			return r;
 		};
 		vrAfterAnimation_ = on(L"iCoreAfterAnimation");
+		vrMeet_ = on(L"iCoreMeet");
+		vrTakeOver_ = on(L"iCoreTakeOver");
+		vrFall_ = on(L"iCoreFall");
 		if (on(L"iCoreProjectiles")) {
 			HookArrows();
 		}

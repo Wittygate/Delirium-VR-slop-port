@@ -229,8 +229,10 @@ namespace delirium
 			return;
 		}
 		ThrowStep(a_actor);
-		Meet(a_actor);
-		if (takeOver_ && ready_ && !a_actor->IsPlayerRef()) {
+		if (vrMeet_) {
+			Meet(a_actor);
+		}
+		if (vrTakeOver_ && takeOver_ && ready_ && !a_actor->IsPlayerRef()) {
 			if (a_actor->IsInRagdollState()) {
 				TryTakeOver(a_actor, a_actor->IsDead());
 			} else if (g_skip.load(std::memory_order_relaxed) != 0) {
@@ -240,7 +242,7 @@ namespace delirium
 		if (g_held.load(std::memory_order_relaxed) != 0) {
 			CheckHeld(a_actor);
 		}
-		if (highFalls_ && ready_) {
+		if (vrFall_ && highFalls_ && ready_) {
 			WatchFall(a_actor);  // returns at once unless she is in the air (it skips NPCs Delirium has)
 		}
 		if (g_count.load(std::memory_order_relaxed) == 0) {
