@@ -72,6 +72,13 @@ namespace delirium
 		if (g_presentSlot) {
 			return;
 		}
+		if (REL::Module::IsVR()) {
+			// VR: the window's swap chain is only the desktop mirror (the headset frame goes to the compositor), and on
+			// modded setups it is another layer's proxy (Community Shaders' Streamline sl.interposer): patching its vtable
+			// is the prime suspect for a crash on load. Poses are shown as soon as they are done (the no-swap-chain path).
+			logger::info("Present not hooked on VR: her meshes draw each pose as soon as it is done");
+			return;
+		}
 		auto* renderer = RE::BSGraphics::Renderer::GetSingleton();
 		auto* chain = renderer ? renderer->GetRuntimeData().renderWindows[0].swapChain : nullptr;
 		if (!chain) {
