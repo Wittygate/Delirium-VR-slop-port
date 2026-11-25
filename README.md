@@ -16,7 +16,7 @@ fixing list.
 
 I tested it on a fresh save in the realm of Lorkhan, on a heavy modlist (modified Tahrovin). Not much in-game.
 
-**Please don't report bugs of this port to Mentally0Unstable or YoucefNabil.** They made the flatscreen mod and its
+**Please don't report bugs of this port to YoucefNabil/Mentally0Unstable.** They made the flatscreen mod and its
 physics, and have nothing to do with this port.
 
 ## Requirements
@@ -59,8 +59,7 @@ original (SE/AE) Skyrim Delirium next to it: it's not needed and it won't work.
 
 ## Credits
 
-- **Mentally0Unstable**: Skyrim Delirium, the Skyrim mod itself. Big thank you to him.
-- **YoucefNabil**: the original Delirium physics. Big thank you to him too.
+- **YoucefNabil/Mentally0Unstable**: Skyrim Delirium, the Skyrim mod itself, and the Delirium fork it builds on. Big thank you to him.
 - **PVCPC**: the Delirium physics engine (`delirium_physics.dll`, unchanged from 2.1.1).
 - **adamhynek**: HIGGS and PLANCK, whose open source made the VR addresses and compatibility possible.
 - **alandtse** and the CommonLibSSE-NG contributors, the SKSEVR team, meh321 (Address Library).
