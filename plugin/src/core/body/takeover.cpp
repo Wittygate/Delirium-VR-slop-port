@@ -205,8 +205,14 @@ namespace delirium
 			}
 			tris = static_cast<std::size_t>(std::max(0, dl.nm_world_triangle_count(a.world)));
 			if (a_quiet) {
+				// the new world is empty but for what was gathered: the flat floor of the first one goes in again (seen:
+				// 0 triangles re-gathered, she fell 20 m through the floor in Delirium's physics)
+				const bool floor = a.flatFloor || tris == 0;
+				if (floor) {
+					dl.nm_world_add_floor(a.world, 0, 0, 0, 100.0f);
+				}
 				const auto ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
-				logger::info("  world re-gathered around the body ({:.1f} ms): {} triangles", ms, tris);
+				logger::info("  world re-gathered around the body ({:.1f} ms): {} triangles{}", ms, tris, floor ? ", flat floor kept" : "");
 				return;
 			}
 			// what is under the pelvis, and which way it faces (a downward face = triangles wound inside out)
@@ -220,6 +226,7 @@ namespace delirium
 				st.unknown.empty() ? "" : "; boxed:" + st.unknown);
 		}
 		if (!ground) {
+			a.flatFloor = true;
 			dl.nm_world_add_floor(a.world, 0, 0, 0, 100.0f);
 			logger::info("world: flat floor at the feet");
 		}

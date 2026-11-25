@@ -148,6 +148,7 @@ namespace delirium
 			NmWorld*                           world{};
 			RE::NiPoint3                       origin;  // game units; physics works in metres from here
 			RE::NiPoint3                       colCenter;  // game units: where the collision patch was gathered around
+			bool                               flatFloor{ false };  // the first world had no ground: a flat floor at her feet
 			// the 3D she was taken on, held: a script can swap it under us (outfit, disable / enable, Helgen's scenes) and
 			// free the bones below; held, they stay alive until we let go, and a new 3D lets her go (Same3D)
 			RE::NiPointer<RE::NiAVObject>      root;
