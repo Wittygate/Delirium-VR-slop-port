@@ -364,12 +364,17 @@ namespace
 			const auto site = REL::Relocation<std::uintptr_t>{ REL::VariantID(38859, 39896, 0x686D80) }.address() + REL::Relocate<std::size_t>(0x3DB, 0x2B6, 0x3E4);
 			const auto want = REL::Relocation<std::uintptr_t>{ REL::VariantID(36681, 37689, 0x600DF0) }.address();
 			const auto* p = reinterpret_cast<const std::uint8_t*>(site);
-			if (p[0] != 0xE8 || site + 5 + *reinterpret_cast<const std::int32_t*>(p + 1) != want) {
+			const auto  target = p[0] == 0xE8 ? site + 5 + *reinterpret_cast<const std::int32_t*>(p + 1) : 0;
+			// PLANCK (VR) hooks this same call: then it leads out of the game's code into PLANCK's trampoline, and ours
+			// goes on top of theirs
+			const auto text = REL::Module::get().segment(REL::Segment::textx);
+			const bool other = target && (target < text.address() || target >= text.address() + text.size());
+			if (!target || (target != want && !other)) {
 				logger::error("get-up hook: +{:X} is not the call to IsRagdollMovingSlowEnoughToGetUp; not hooked", site - base);
 				return;
 			}
 			func = SKSE::GetTrampoline().write_call<5>(site, thunk);
-			logger::info("get-up hook at +{:X}", site - base);
+			logger::info("get-up hook at +{:X}{}", site - base, other ? " (chained after another mod's hook there)" : "");
 		}
 	};
 
