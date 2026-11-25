@@ -444,10 +444,18 @@ namespace
 	// ragdoll): Skyrim's runs as always (it stops what she was doing), Delirium then plays it on the body.
 	struct Stagger
 	{
+		static inline thread_local bool t_inside = false;  // the graph's staggerStart sent from inside here is this stagger
+		static inline std::atomic<const RE::Actor*> lastActor{ nullptr };
+		static inline std::atomic<std::uint64_t>    lastTick{ 0 };
+
 		static bool thunk(RE::Actor* a_target, float a_magnitude, RE::Actor* a_source)
 		{
 			const bool was = a_target && a_target->AsActorState()->IsStaggered();
+			t_inside = true;
 			const bool r = func(a_target, a_magnitude, a_source);
+			t_inside = false;
+			lastActor = a_target;
+			lastTick = GetTickCount64();
 			if (core::Use c; c && a_target) {
 				c->onStagger(a_target, a_magnitude, a_source, !was && a_target->AsActorState()->IsStaggered());
 			}
@@ -463,6 +471,50 @@ namespace
 			const auto kStart = REL::Module::IsAE() ? std::span<const std::uint8_t>(kStartAE) : std::span<const std::uint8_t>(kStartSE);
 			func = reinterpret_cast<decltype(func)>(
 				HookEntry(REL::Relocation<std::uintptr_t>{ REL::RelocationID(36700, 37710) }.address(), kStart, reinterpret_cast<void*>(&thunk), "stagger"));
+		}
+	};
+
+	// Skyrim VR: a stagger started straight on the animation graph ("staggerStart"), not through the stagger above.
+	// PLANCK does that for a hand shove that did not turn into a big bump. Delirium plays it like any stagger.
+	// IAnimationGraphManagerHolder::NotifyAnimationGraph in Character's holder vtable (VTABLE_Character[3], slot 1);
+	// PLANCK patches the same slot first, ours calls theirs.
+	struct GraphStagger
+	{
+		static bool thunk(RE::IAnimationGraphManagerHolder* a_this, const RE::BSFixedString& a_event)
+		{
+			const bool r = func(a_this, a_event);
+			static const RE::BSFixedString kStart{ "staggerStart" };
+			if (r && a_event.data() == kStart.data() && !Stagger::t_inside) {
+				auto* actor = static_cast<RE::Actor*>(static_cast<RE::TESObjectREFR*>(a_this));
+				// the stagger function's own event, if it comes on another thread: same actor within 0.3 s
+				const bool same = Stagger::lastActor.load() == actor && GetTickCount64() - Stagger::lastTick.load() < 300;
+				if (!same && !actor->IsPlayerRef()) {
+					auto*       player = RE::PlayerCharacter::GetSingleton();
+					RE::Actor*  by = player && player->GetPosition().GetDistance(actor->GetPosition()) < 200.0f ? player : nullptr;
+					float       mag = 0.0f;
+					actor->GetGraphVariableFloat("staggerMagnitude", mag);
+					logger::info("graph stagger: {:08X} magnitude {:.2f}{}", actor->GetFormID(), mag, by ? " (player beside her)" : "");
+					if (core::Use c; c) {
+						c->onStagger(actor, mag, by, true);
+					}
+				}
+			}
+			return r;
+		}
+		static inline bool (*func)(RE::IAnimationGraphManagerHolder*, const RE::BSFixedString&){};
+
+		static void Install()
+		{
+			if (!REL::Module::IsVR()) {
+				return;
+			}
+			auto* slot = reinterpret_cast<std::uintptr_t*>(REL::Relocation<std::uintptr_t>{ RE::VTABLE_Character[3] }.address()) + 1;
+			func = reinterpret_cast<decltype(func)>(*slot);
+			DWORD old{};
+			VirtualProtect(slot, sizeof(*slot), PAGE_EXECUTE_READWRITE, &old);
+			*slot = reinterpret_cast<std::uintptr_t>(&thunk);
+			VirtualProtect(slot, sizeof(*slot), old, &old);
+			logger::info("graph stagger hook on Character's graph holder (was +{:X})", reinterpret_cast<std::uintptr_t>(func) - REL::Module::get().base());
 		}
 	};
 
@@ -683,6 +735,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	}
 	if (On(L"iKillHook")) {
 		Kill::Install();
+	}
+	if (On(L"iGraphStaggerHook")) {
+		GraphStagger::Install();
 	}
 	SKSE::GetMessagingInterface()->RegisterListener(OnMessage);
 	return true;

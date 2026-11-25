@@ -42,6 +42,20 @@ namespace delirium::vrmods
 	bool Higgs() { return g_higgs.load(std::memory_order_relaxed) != nullptr; }
 	bool Planck() { return g_planck.load(std::memory_order_relaxed) != nullptr; }
 
+	void LogHiggs()
+	{
+		auto* h = g_higgs.load(std::memory_order_relaxed);
+		if (!h) {
+			logger::info("higgs: no HIGGS API");
+			return;
+		}
+		for (const bool left : { true, false }) {
+			auto* r = h->GetGrabbedObject(left);
+			logger::info("higgs: {} hand holds {}", left ? "left" : "right",
+				r ? std::format("{:08X} '{}' (form type {})", r->GetFormID(), r->GetName(), static_cast<int>(r->GetFormType())) : std::string("nothing"));
+		}
+	}
+
 	bool HiggsHolds(const RE::Actor* a_actor)
 	{
 		auto* h = g_higgs.load(std::memory_order_relaxed);

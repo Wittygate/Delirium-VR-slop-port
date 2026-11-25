@@ -12,4 +12,5 @@ namespace delirium::vrmods
 
 	// either HIGGS hand holds this actor (a grabbed body part counts): Delirium keeps its hands off her
 	[[nodiscard]] bool HiggsHolds(const RE::Actor* a_actor);
+	void LogHiggs();  // what each HIGGS hand holds (debug command "higgs")
 }

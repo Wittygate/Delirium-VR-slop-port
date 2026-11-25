@@ -151,9 +151,9 @@ namespace delirium
 			g_loadSinkOn = true;
 		}
 		// [VRDebug] in SkyrimDelirium.ini: switch parts off to find a crash (1 = on, the default)
-		auto on = [](const wchar_t* a_key) {
+		auto on = [](const wchar_t* a_key, int a_default = 1) {
 			const auto ini = (g_pluginDir / L"SkyrimDelirium.ini").wstring();
-			const bool r = GetPrivateProfileIntW(L"VRDebug", a_key, 1, ini.c_str()) != 0;
+			const bool r = GetPrivateProfileIntW(L"VRDebug", a_key, a_default, ini.c_str()) != 0;
 			if (!r) {
 				logger::warn("[VRDebug] {} = 0: skipped", std::filesystem::path(a_key).string());
 			}
@@ -163,7 +163,9 @@ namespace delirium
 		vrMeet_ = on(L"iCoreMeet");
 		vrMeetOthers_ = on(L"iCoreMeetOthers");
 		vrMeetStrikes_ = on(L"iCoreMeetStrikes");
-		vrMeetWorld_ = on(L"iCoreMeetWorld");
+		// VR: off unless asked for. It crashed Skyrim VR on load with PLANCK (which keeps nearby NPCs' ragdolls in the
+		// world anyway); cause not found yet
+		vrMeetWorld_ = on(L"iCoreMeetWorld", REL::Module::IsVR() ? 0 : 1);
 		vrTakeOver_ = on(L"iCoreTakeOver");
 		vrFall_ = on(L"iCoreFall");
 		if (on(L"iCoreProjectiles")) {

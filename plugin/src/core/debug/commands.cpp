@@ -252,6 +252,8 @@ namespace delirium
 				if (a && b) {
 					Throw(a, b, w.size() >= 4 ? std::stof(w[3]) : 15.0f);
 				}
+			} else if (w[0] == "higgs") {
+				vrmods::LogHiggs();
 			} else if (w[0] == "near") {
 				// NPCs near the player: id, name, distance
 				auto* player = RE::PlayerCharacter::GetSingleton();
