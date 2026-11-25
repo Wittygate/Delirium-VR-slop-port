@@ -161,6 +161,9 @@ namespace delirium
 		};
 		vrAfterAnimation_ = on(L"iCoreAfterAnimation");
 		vrMeet_ = on(L"iCoreMeet");
+		vrMeetOthers_ = on(L"iCoreMeetOthers");
+		vrMeetStrikes_ = on(L"iCoreMeetStrikes");
+		vrMeetWorld_ = on(L"iCoreMeetWorld");
 		vrTakeOver_ = on(L"iCoreTakeOver");
 		vrFall_ = on(L"iCoreFall");
 		if (on(L"iCoreProjectiles")) {

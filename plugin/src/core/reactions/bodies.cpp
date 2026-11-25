@@ -158,7 +158,9 @@ namespace delirium
 	void Engine::Meet(RE::Actor* a_actor)
 	{
 		const bool upright = !a_actor->IsPlayerRef() && Upright(a_actor);
-		Others(a_actor, upright);
+		if (vrMeetOthers_) {
+			Others(a_actor, upright);
+		}
 		if (!bodies_) {
 			// switched off: everything back as Skyrim had it, once
 			if (world::Changed() && !leaving_.exchange(true)) {
@@ -173,10 +175,10 @@ namespace delirium
 			return;
 		}
 		const bool down = a_actor->IsInRagdollState() && !upright;  // dead on her feet: Skyrim's ragdoll, but Delirium has her up
-		if (down || upright) {
+		if ((down || upright) && vrMeetStrikes_) {
 			Strikes(a_actor, down);
 		}
-		if (down || !Stands(a_actor)) {
+		if (down || !Stands(a_actor) || !vrMeetWorld_) {
 			return;
 		}
 		// her bodies are looked at twice a second, each NPC on her own clock

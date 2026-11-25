@@ -428,6 +428,9 @@ namespace delirium
 		std::unordered_map<RE::FormID, std::chrono::steady_clock::time_point> releasedAt_;  // let go in Skyrim's ragdoll: when (the get-up log)
 		bool                                  vrAfterAnimation_{ true };  // [VRDebug] iCoreAfterAnimation
 		bool                                  vrMeet_{ true };            // [VRDebug] iCoreMeet (bodies meeting bodies)
+		bool                                  vrMeetOthers_{ true };      // [VRDebug] iCoreMeetOthers
+		bool                                  vrMeetStrikes_{ true };     // [VRDebug] iCoreMeetStrikes
+		bool                                  vrMeetWorld_{ true };       // [VRDebug] iCoreMeetWorld (standing ragdolls in/out of the world)
 		bool                                  vrTakeOver_{ true };        // [VRDebug] iCoreTakeOver (Skyrim's ragdolls)
 		bool                                  vrFall_{ true };            // [VRDebug] iCoreFall (high falls)
 		std::vector<RE::ActorHandle>          skip_;  // in Skyrim's ragdoll but not ours (getting up, paralysed, ...)
