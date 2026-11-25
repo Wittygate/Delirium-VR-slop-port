@@ -36,14 +36,16 @@ I tested it on a fresh save in the realm of Lorkhan, on a heavy modlist (modifie
 ## What was tested
 
 Melee, fire/frost/shock spells, explosions, crossbow, Fus Ro Dah, staggers and pushes, PLANCK shoves, kills and dying
-on the feet, HIGGS grab/drop/throw. Frame rate felt fine.
+on the feet, HIGGS grab/drop/throw. Frame rate felt fine, but I'm playing on a relatively beefy setup.
 
 Not tested: creatures (wolves, draugr, trolls...), long falls, big fights, followers, mounted NPCs.
+
+My specs: CPU AMD Ryzen 9 9950X3D, RAM 32 GB, GPU Radeon RX 9070 XT (16 GB).
 
 ## Install
 
 Download the zip from [Releases](../../releases) and install it with MO2 or Vortex. No .esp. Don't install the
-original (SE/AE) Skyrim Delirium next to it.
+original (SE/AE) Skyrim Delirium next to it: it's not needed and it won't work.
 
 ## Known issues
 
@@ -51,12 +53,12 @@ original (SE/AE) Skyrim Delirium next to it.
   crashes your game.
 - No in-game settings menu (SKSE Menu Framework doesn't exist for VR): edit `SKSE\Plugins\SkyrimDelirium.ini`.
 - Enemies aim at where a ragdolled NPC was standing until it gets back up.
-- The mod turns killmoves off through a global the save keeps. After uninstalling, `set killmove to 1` in the console
-  brings them back.
+- The mod turns killmoves off through a global the save keeps. In VR that only concerns the killmoves NPCs do on each
+  other. After uninstalling, `set killmove to 1` in the console brings them back.
 
 ## Credits
 
-- **YoucefNabil**: Skyrim Delirium, the whole mod. This only adapts it to VR.
+- **YoucefNabil**: Skyrim Delirium, the whole mod. Big thank you to him.
 - **PVCPC**: the Delirium physics engine (`delirium_physics.dll`, unchanged from 2.1.1).
 - **adamhynek**: HIGGS and PLANCK, whose open source made the VR addresses and compatibility possible.
 - **alandtse** and the CommonLibSSE-NG contributors, the SKSEVR team, meh321 (Address Library).
@@ -65,6 +67,6 @@ Third-party code and licences: [CREDITS.md](CREDITS.md). VR port notes: [PORT-NO
 
 ## Licence
 
-GPL-3.0-only, like the original ([LICENSE](LICENSE)). This repository is the full source of the port.
+GPL-3.0-only, just like the original ([LICENSE](LICENSE)). This repository is the full source of the port.
 
-*Wittygate, with Claude.*
+*Wittygate*
