@@ -9,6 +9,11 @@
 
 namespace
 {
+	bool On(const wchar_t* a_key);  // [VRDebug] switches, below
+}
+
+namespace
+{
 	// ---- the core (SkyrimDeliriumCore.dll): loaded from a temporary copy so it can be rebuilt and swapped in game.
 	// Hooks reach it through Use, which holds a shared lock; a reload takes it exclusively, so no hook is inside the
 	// old core while it shuts down. Nested hooks on one thread (Skyrim calling a hooked function from inside the
@@ -598,7 +603,9 @@ namespace
 			break;
 		case SKSE::MessagingInterface::kDataLoaded:
 			{
-				FrameSync::Install();
+				if (On(L"iFrameSyncHook")) {
+					FrameSync::Install();
+				}
 				core::dataLoaded = true;
 				if (core::Use c; c) {
 					c->dataLoaded();
@@ -612,6 +619,20 @@ namespace
 		default:
 			break;
 		}
+	}
+}
+
+namespace
+{
+	// [VRDebug] in SkyrimDelirium.ini: switch single hooks off to find a crash (1 = on, the default)
+	bool On(const wchar_t* a_key)
+	{
+		const auto ini = (core::pluginDir / L"SkyrimDelirium.ini").wstring();
+		const bool on = GetPrivateProfileIntW(L"VRDebug", a_key, 1, ini.c_str()) != 0;
+		if (!on) {
+			logger::warn("[VRDebug] {} = 0: skipped", std::filesystem::path(a_key).string());
+		}
+		return on;
 	}
 }
 
@@ -633,18 +654,36 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 		GetModuleFileNameW(m, p, MAX_PATH);
 		core::pluginDir = std::filesystem::path(p).parent_path();
 	}
-	core::Load();
+	if (On(L"iLoadCore")) {
+		core::Load();
+	}
 	// CommonLib allocates the trampoline once (later requests are ignored): room for every hook (14 bytes each, the
 	// animation hook's extra call sites too) and the entry hooks' copied openings
 	SKSE::AllocTrampoline(512);
-	UpdateAnimationInternal::Install();  // does nothing per frame until a body is active
-	PoseToNodes::Install();
-	DriveToPose::Install();
-	GetUpCheck::Install();
-	ProcessHitData::Install();
-	Stagger::Install();
-	Bump::Install();
-	Kill::Install();
+	if (On(L"iAnimationHook")) {
+		UpdateAnimationInternal::Install();
+	}  // does nothing per frame until a body is active
+	if (On(L"iPoseHook")) {
+		PoseToNodes::Install();
+	}
+	if (On(L"iRagdollHook")) {
+		DriveToPose::Install();
+	}
+	if (On(L"iGetUpHook")) {
+		GetUpCheck::Install();
+	}
+	if (On(L"iHitHook")) {
+		ProcessHitData::Install();
+	}
+	if (On(L"iStaggerHook")) {
+		Stagger::Install();
+	}
+	if (On(L"iBumpHook")) {
+		Bump::Install();
+	}
+	if (On(L"iKillHook")) {
+		Kill::Install();
+	}
 	SKSE::GetMessagingInterface()->RegisterListener(OnMessage);
 	return true;
 }

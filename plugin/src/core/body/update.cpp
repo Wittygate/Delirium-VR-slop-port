@@ -225,6 +225,9 @@ namespace delirium
 
 	void Engine::AfterAnimation(RE::Actor* a_actor, float a_delta)
 	{
+		if (!vrAfterAnimation_) {
+			return;
+		}
 		ThrowStep(a_actor);
 		Meet(a_actor);
 		if (takeOver_ && ready_ && !a_actor->IsPlayerRef()) {

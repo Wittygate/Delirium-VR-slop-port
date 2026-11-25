@@ -150,9 +150,23 @@ namespace delirium
 			ui->AddEventSink<RE::MenuOpenCloseEvent>(&g_loadSink);
 			g_loadSinkOn = true;
 		}
-		HookArrows();
+		// [VRDebug] in SkyrimDelirium.ini: switch parts off to find a crash (1 = on, the default)
+		auto on = [](const wchar_t* a_key) {
+			const auto ini = (g_pluginDir / L"SkyrimDelirium.ini").wstring();
+			const bool r = GetPrivateProfileIntW(L"VRDebug", a_key, 1, ini.c_str()) != 0;
+			if (!r) {
+				logger::warn("[VRDebug] {} = 0: skipped", std::filesystem::path(a_key).string());
+			}
+			return r;
+		};
+		vrAfterAnimation_ = on(L"iCoreAfterAnimation");
+		if (on(L"iCoreProjectiles")) {
+			HookArrows();
+		}
 		HookPresent();
-		NoKillMoves();
+		if (on(L"iCoreNoKillMoves")) {
+			NoKillMoves();
+		}
 		logger::info("ready: {} on body {}, rig {} (build faces {:.2} rad)", usingGta_ ? fredPath_ : std::string("own character"), buildPath_, rigPath_, rigYaw_);
 		return true;
 	}
