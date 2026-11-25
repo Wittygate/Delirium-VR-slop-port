@@ -25,6 +25,8 @@ namespace delirium::vrmods
 			virtual unsigned int GetBuildNumber() = 0;
 		};
 
+		std::mutex                                                              g_heldLock;
+		std::unordered_map<const RE::Actor*, std::chrono::steady_clock::time_point> g_heldAt;  // last seen in a hand
 		std::atomic<IHiggs001*>  g_higgs{ nullptr };
 		std::atomic<IPlanck001*> g_planck{ nullptr };
 	}
@@ -62,6 +64,22 @@ namespace delirium::vrmods
 		if (!h || !a_actor) {
 			return false;
 		}
-		return h->GetGrabbedObject(true) == a_actor || h->GetGrabbedObject(false) == a_actor;
+		const bool held = h->GetGrabbedObject(true) == a_actor || h->GetGrabbedObject(false) == a_actor;
+		if (held) {
+			const auto       now = std::chrono::steady_clock::now();
+			std::scoped_lock l(g_heldLock);
+			g_heldAt[a_actor] = now;
+			if (g_heldAt.size() > 64) {
+				std::erase_if(g_heldAt, [&](const auto& p) { return now - p.second > std::chrono::seconds(10); });
+			}
+		}
+		return held;
+	}
+
+	bool HiggsHeldRecently(const RE::Actor* a_actor, float a_seconds)
+	{
+		std::scoped_lock l(g_heldLock);
+		const auto       it = g_heldAt.find(a_actor);
+		return it != g_heldAt.end() && std::chrono::steady_clock::now() - it->second < std::chrono::duration<float>(a_seconds);
 	}
 }

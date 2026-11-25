@@ -31,8 +31,8 @@ namespace delirium
 
 	bool Engine::Activate(RE::Actor* a_actor, bool a_takeover, bool a_death)
 	{
-		if (vrmods::HiggsHolds(a_actor)) {
-			logger::info("{:08X}: held by HIGGS, left alone", a_actor->GetFormID());
+		if (vrmods::HiggsHolds(a_actor) || vrmods::HiggsHeldRecently(a_actor, kAfterHiggs)) {
+			logger::info("{:08X}: held by HIGGS (or just let go), left alone", a_actor->GetFormID());
 			return false;
 		}
 		auto* root = a_actor->Get3D(false);
@@ -399,8 +399,8 @@ namespace delirium
 			}
 			return;
 		}
-		if (vrmods::HiggsHolds(a_actor)) {
-			return;  // a HIGGS hand holds her (PLANCK ragdolls a grabbed NPC): looked at again once she is let go or thrown
+		if (vrmods::HiggsHolds(a_actor) || vrmods::HiggsHeldRecently(a_actor, kAfterHiggs)) {
+			return;  // a HIGGS hand holds her (or just let go of her) (PLANCK ragdolls a grabbed NPC): looked at again once she is let go or thrown
 		}
 		using K = RE::KNOCK_STATE_ENUM;
 		const auto ks = a_actor->AsActorState()->GetKnockState();

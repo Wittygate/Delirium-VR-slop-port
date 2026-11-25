@@ -64,6 +64,11 @@ namespace delirium
 		if (!a_actor || a_actor == t_ourKill || dyingTime_ <= 0.0f || !ready_ || a_actor->IsPlayerRef()) {
 			return false;
 		}
+		// essential (and protected, unless the player kills): Skyrim does not let her die, so no death of ours either
+		// (seen: a training dummy 'killed' by fall damage played Delirium's death, then fought its own script)
+		if (a_actor->IsEssential() || (a_actor->IsProtected() && !(a_attacker && a_attacker->IsPlayerRef()))) {
+			return false;
+		}
 		const auto id = a_actor->GetFormID();
 		if (dieAtOnce_) {
 			bool held;

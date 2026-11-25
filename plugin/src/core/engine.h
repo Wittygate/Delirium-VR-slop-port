@@ -426,6 +426,7 @@ namespace delirium
 		std::recursive_mutex                  lock_;  // recursive: Skyrim may call a hooked function from inside one of ours
 		std::vector<std::unique_ptr<Active>>  active_;
 		std::unordered_map<RE::FormID, std::chrono::steady_clock::time_point> releasedAt_;  // let go in Skyrim's ragdoll: when (the get-up log)
+		static constexpr float                kAfterHiggs = 0.6f;          // s after a HIGGS hand lets go before Delirium takes her
 		bool                                  vrAfterAnimation_{ true };  // [VRDebug] iCoreAfterAnimation
 		bool                                  vrMeet_{ true };            // [VRDebug] iCoreMeet (bodies meeting bodies)
 		bool                                  vrMeetOthers_{ true };      // [VRDebug] iCoreMeetOthers

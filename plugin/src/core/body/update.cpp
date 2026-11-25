@@ -357,6 +357,11 @@ namespace delirium
 					}
 				}
 			}
+			if (a.maxSpeed > 150.0f) {
+				logger::warn("{:08X}: Delirium's body blew up (bodies steered at {:.0f} m/s): Skyrim's ragdoll takes over", a_actor->GetFormID(), a.maxSpeed);
+				Release(i, "physics blew up");
+				return;
+			}
 			const bool  fallen = dl.nm_agent_has_fallen(a.agent) != 0;
 			const bool  balancing = dl.nm_agent_is_balancing(a.agent) != 0;
 			const float ke = dl.nm_agent_get_kinetic_energy(a.agent);
@@ -368,6 +373,12 @@ namespace delirium
 				// down and gaining energy second after second: nothing pushes her, so the simulation is running away
 				a.keRising = (a.knockQueued && ke > kRunawayKE && a.keLast >= 0.0f && ke > a.keLast * 1.1f) ? a.keRising + 1 : 0;
 				a.keLast = ke;
+				// a body the simulation has lost (seen after a HIGGS drop: head 40 m up, limbs at 500 m/s): let go at once
+				if (std::abs(head[2]) > 15.0f) {
+					logger::warn("{:08X}: Delirium's body blew up (head {:.0f} m from her origin): Skyrim's ragdoll takes over", a_actor->GetFormID(), head[2]);
+					Release(i, "physics blew up");
+					return;
+				}
 				if (a.filled) {
 					logger::info("  {} frames without Skyrim's pose copy: ours put on after its update", a.filled);  // trace
 				}
