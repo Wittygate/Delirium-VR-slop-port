@@ -23,6 +23,45 @@ namespace delirium
 		};
 	}
 
+	namespace
+	{
+		std::mutex                                                                         g_origLock;
+		std::unordered_map<const void*, std::pair<RE::FormID, std::array<float, 4>>> g_orig;
+	}
+
+	std::array<float, 4> OriginalMassInv(const RE::hkpRigidBody* a_body, RE::FormID a_owner)
+	{
+		std::scoped_lock l(g_origLock);
+		auto             it = g_orig.find(a_body);
+		if (it == g_orig.end() || it->second.first != a_owner) {  // new, or the memory now holds someone else's body
+			std::array<float, 4> now;
+			std::memcpy(now.data(), &a_body->motion.inertiaAndMassInv, sizeof(now));
+			if (g_orig.size() > 4096) {
+				g_orig.clear();
+			}
+			it = g_orig.insert_or_assign(a_body, std::make_pair(a_owner, now)).first;
+		}
+		return it->second.second;
+	}
+
+	void RestoreOriginalMass(RE::Actor* a_actor)
+	{
+		RE::BSAnimationGraphManagerPtr mgr;
+		if (!a_actor->GetAnimationGraphManager(mgr) || !mgr || mgr->graphs.empty() || !mgr->graphs[0]) {
+			return;
+		}
+		auto* d = mgr->graphs[0]->characterInstance.ragdollDriver.get();
+		if (!d || !d->ragdoll) {
+			return;
+		}
+		std::scoped_lock l(g_origLock);
+		for (auto* b : d->ragdoll->rigidBodies) {
+			if (const auto it = b ? g_orig.find(b) : g_orig.end(); it != g_orig.end() && it->second.first == a_actor->GetFormID()) {
+				std::memcpy(&b->motion.inertiaAndMassInv, it->second.second.data(), sizeof(it->second.second));
+			}
+		}
+	}
+
 	void Engine::LinkBodies(Active& a, RE::Actor* a_actor)
 	{
 		// Skyrim hangs each ragdoll body on a skeleton bone's collision object
@@ -50,7 +89,9 @@ namespace delirium
 				continue;
 			}
 			BodyLink l{ body, it->second };
-			std::memcpy(l.massInv.data(), &body->motion.inertiaAndMassInv, sizeof(l.massInv));
+			// Skyrim's own values (not what HIGGS wrote back after a grab), and put back on the body before we weigh it
+			l.massInv = OriginalMassInv(body, a_actor->GetFormID());
+			std::memcpy(&body->motion.inertiaAndMassInv, l.massInv.data(), sizeof(l.massInv));
 			a.sky.bodies.push_back(l);
 		}
 		// Skyrim hangs each body exactly on its bone (havok units = game units * kUnit). Check it on distances between

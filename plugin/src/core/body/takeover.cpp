@@ -399,8 +399,12 @@ namespace delirium
 			}
 			return;
 		}
-		if (vrmods::HiggsHolds(a_actor) || vrmods::HiggsHeldRecently(a_actor, kAfterHiggs)) {
-			return;  // a HIGGS hand holds her (or just let go of her) (PLANCK ragdolls a grabbed NPC): looked at again once she is let go or thrown
+		if (vrmods::HiggsHolds(a_actor)) {
+			return;  // a HIGGS hand holds her
+		}
+		if (vrmods::HiggsHeldRecently(a_actor, kAfterHiggs)) {
+			RestoreOriginalMass(a_actor);  // HIGGS just wrote its saved inertia back, which may be ours: Skyrim's again
+			return;  // and she is taken once HIGGS has let go for a moment (PLANCK ragdolls a grabbed NPC): looked at again once she is let go or thrown
 		}
 		using K = RE::KNOCK_STATE_ENUM;
 		const auto ks = a_actor->AsActorState()->GetKnockState();

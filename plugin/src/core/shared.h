@@ -88,7 +88,12 @@ namespace delirium
 	bool HoldsCombat(const RE::Actor* a_actor);  // body/hold.cpp: held upright, her attacks and casts do nothing
 	bool DeadOnFeet(const RE::Actor* a_actor);   // reactions/dying.cpp: killed, still stumbling in Delirium (pinned)
 	void UnhookArrows();
-	void HookPresent();  // the render frame's end, for PublishShown
+	void HookPresent();
+	// Skyrim's own inverse mass and inertia of a ragdoll body, as first seen (body/calibrate.cpp). HIGGS saves a body's
+	// inertia when grabbed and writes it back when dropped: grabbed while Delirium weighed it, it wrote Delirium's back,
+	// and every grab-and-drop scaled it again until the limbs spun away
+	std::array<float, 4> OriginalMassInv(const RE::hkpRigidBody* a_body, RE::FormID a_owner);
+	void                 RestoreOriginalMass(RE::Actor* a_actor);  // her ragdoll bodies back to those  // the render frame's end, for PublishShown
 	void UnhookPresent();
 	void PublishShown();  // body/show.cpp: every NPC's finished pose into what her skins read
 	void FrameSync();     // body/show.cpp: after the physics mods' frame sync, the same with what they wrote over her bones
