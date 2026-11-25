@@ -31,6 +31,10 @@ namespace delirium
 
 	bool Engine::Activate(RE::Actor* a_actor, bool a_takeover, bool a_death)
 	{
+		if (vrmods::HiggsHolds(a_actor)) {
+			logger::info("{:08X}: held by HIGGS, left alone", a_actor->GetFormID());
+			return false;
+		}
 		auto* root = a_actor->Get3D(false);
 		if (!root) {
 			return false;
@@ -394,6 +398,9 @@ namespace delirium
 				logger::info("{:08X}: dead, left to Skyrim: no Delirium body for this skeleton", a_actor->GetFormID());
 			}
 			return;
+		}
+		if (vrmods::HiggsHolds(a_actor)) {
+			return;  // a HIGGS hand holds her (PLANCK ragdolls a grabbed NPC): looked at again once she is let go or thrown
 		}
 		using K = RE::KNOCK_STATE_ENUM;
 		const auto ks = a_actor->AsActorState()->GetKnockState();

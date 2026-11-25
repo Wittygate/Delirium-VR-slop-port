@@ -1,6 +1,7 @@
 #include "core_api.h"
 #include <spdlog/sinks/basic_file_sink.h>
 #include "engine.h"
+#include "vrmods.h"
 
 namespace delirium
 {
@@ -51,9 +52,10 @@ namespace
 	void SettingsFileChanged() { Engine::Get().SettingsFileChanged(); }
 	bool OnBump(RE::Actor* a, RE::Actor* b) { return Engine::Get().OnBump(a, b); }
 	void FrameSync() { delirium::FrameSync(); }
+	void VrMods(void* h, void* p) { delirium::vrmods::Set(h, p); }
 
 	constexpr delirium::CoreApi kApi{ delirium::kCoreApi, Init, DataLoaded, Shutdown, Busy, AfterAnimation, AfterPose, DriveRagdoll, KeepsDown,
-		OnKey, Command, OnHitData, OnStagger, OnKill, Menu, SettingsFileChanged, OnBump, FrameSync };
+		OnKey, Command, OnHitData, OnStagger, OnKill, Menu, SettingsFileChanged, OnBump, FrameSync, VrMods };
 }
 
 extern "C" __declspec(dllexport) const delirium::CoreApi* DeliriumCore_Get() { return &kApi; }

@@ -36,7 +36,7 @@ namespace delirium
 			return;
 		}
 		auto* vt = *reinterpret_cast<std::uintptr_t**>(a_actor);
-		g_vtSlot = vt + 0x11F;
+		g_vtSlot = vt + REL::Relocate<std::size_t>(0x11F, 0x11F, 0x121);  // VR: two extra Actor virtuals before it
 		g_origUpdate3D = reinterpret_cast<Update3DFn>(*g_vtSlot);
 		PatchSlot(g_vtSlot, reinterpret_cast<std::uintptr_t>(&Update3DHook));
 		logger::info("hooked UpdateActor3DPosition (vtable {:X}, was {:X})", reinterpret_cast<std::uintptr_t>(vt),
@@ -436,7 +436,7 @@ namespace delirium
 			if (g_impactSlot[k]) {
 				continue;
 			}
-			g_impactSlot[k] = reinterpret_cast<std::uintptr_t*>(vts[k].address()) + 0xBD;
+			g_impactSlot[k] = reinterpret_cast<std::uintptr_t*>(vts[k].address()) + REL::Relocate<std::size_t>(0xBD, 0xBD, 0xBE);  // VR: one extra
 			g_origImpact[k] = reinterpret_cast<AddImpactFn>(*g_impactSlot[k]);
 			PatchSlot(g_impactSlot[k], reinterpret_cast<std::uintptr_t>(kImpactHooks[k]));
 			logger::info("hooked {}::AddImpact (vtable {:X}, was {:X})", kProjNames[k], vts[k].address(), reinterpret_cast<std::uintptr_t>(g_origImpact[k]));

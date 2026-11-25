@@ -22,6 +22,8 @@ namespace
 		std::filesystem::path            pluginDir;
 		bool                             dataLoaded = false;
 		int                              generation = 0;
+		void*                            higgs = nullptr;   // Skyrim VR: HIGGS's / PLANCK's mod APIs (kPostPostLoad), else null
+		void*                            planck = nullptr;
 
 		struct Use
 		{
@@ -81,6 +83,7 @@ namespace
 			if (!a->init(SKSE::GetTaskInterface(), pluginDir.c_str(), dataLoaded)) {
 				logger::error("core: not started (see SkyrimDeliriumCore.log)");
 			}
+			a->vrMods(higgs, planck);
 			AcquireSRWLockExclusive(&lock);
 			api = a;
 			mod = m;
@@ -191,7 +194,7 @@ namespace
 		static void Install()
 		{
 			constexpr std::size_t           kOffset = 0x74;
-			REL::Relocation<std::uintptr_t> job{ REL::RelocationID(40436, 41453) };
+			REL::Relocation<std::uintptr_t> job{ REL::VariantID(40436, 41453, 0x7087B0) };  // VR: same +0x74 call (to 0x2B5840)
 			const auto                      site = job.address() + kOffset;
 			const auto                      base = REL::Module::get().base();
 			const auto*                     op = reinterpret_cast<const std::uint8_t*>(site);
@@ -250,13 +253,21 @@ namespace
 		static void Install()
 		{
 			const auto base = REL::Module::get().base();
-			const auto copy = REL::Relocation<std::uintptr_t>{ REL::RelocationID(62933, 63856) }.address();
-			const std::tuple<REL::RelocationID, std::size_t, void (*)(const void*, void*, std::uint16_t)> sites[]{
-				{ REL::RelocationID(62627, 63568), REL::Relocate<std::size_t>(0x7BF, 0x382), &thunk },
-				{ REL::RelocationID(62622, 63563), REL::Relocate<std::size_t>(0x287, 0x285), &thunkPost }
-			};
-			for (const auto& [id, off, fn] : sites) {
-				const auto site = REL::Relocation<std::uintptr_t>{ id }.address() + off;
+			const auto copy = REL::Relocation<std::uintptr_t>{ REL::VariantID(62933, 63856, 0xB3C260) }.address();
+			using Fn = void (*)(const void*, void*, std::uint16_t);
+			std::vector<std::pair<std::uintptr_t, Fn>> sites;
+			if (REL::Module::IsVR()) {
+				// VR 1.4.15 does not inline the graph update's copy: it sits in three small helpers (all pass the graph's
+				// boneNodes, +0x160), and the post-physics one is at the same +0x287 as SE
+				for (const auto vr : { 0xB26D00 + 0xAD, 0xB2A9E0 + 0x110, 0xB27670 + 0x2F }) {
+					sites.emplace_back(base + vr, &thunk);
+				}
+				sites.emplace_back(base + 0xB26750 + 0x287, &thunkPost);
+			} else {
+				sites.emplace_back(REL::Relocation<std::uintptr_t>{ REL::RelocationID(62627, 63568) }.address() + REL::Relocate<std::size_t>(0x7BF, 0x382), &thunk);
+				sites.emplace_back(REL::Relocation<std::uintptr_t>{ REL::RelocationID(62622, 63563) }.address() + REL::Relocate<std::size_t>(0x287, 0x285), &thunkPost);
+			}
+			for (const auto& [site, fn] : sites) {
 				const auto* op = reinterpret_cast<const std::uint8_t*>(site);
 				if (*op != 0xE8 || site + 5 + *reinterpret_cast<const std::int32_t*>(site + 1) != copy) {
 					logger::error("pose hook: +{:X} is not the call to the bone copy +{:X}; not hooked", site - base, copy - base);
@@ -294,7 +305,7 @@ namespace
 		static void Install()
 		{
 			const auto base = REL::Module::get().base();
-			const auto site = REL::Relocation<std::uintptr_t>{ REL::RelocationID(62621, 63562) }.address() + REL::Relocate<std::size_t>(0x25B, 0x256);
+			const auto site = REL::Relocation<std::uintptr_t>{ REL::VariantID(62621, 63562, 0xB26450) }.address() + REL::Relocate<std::size_t>(0x25B, 0x256, 0x25B);
 			if (*reinterpret_cast<const std::uint8_t*>(site) != 0xE8) {
 				logger::error("ragdoll hook: +{:X} is not a call; not hooked", site - base);
 				return;
@@ -323,7 +334,7 @@ namespace
 		{
 			const auto base = REL::Module::get().base();
 			const auto at = REL::Module::IsAE() && REL::Module::get().version() >= SKSE::RUNTIME_SSE_1_7_99 ? 0x9EE : 0x9DC;
-			const auto site = REL::Relocation<std::uintptr_t>{ REL::RelocationID(35565, 36564) }.address() + REL::Relocate<std::size_t>(0x56D, at);
+			const auto site = REL::Relocation<std::uintptr_t>{ REL::VariantID(35565, 36564, 0x5BAB10) }.address() + REL::Relocate<std::size_t>(0x56D, at, 0x611);  // VR: FSMP's own VR site
 			if (*reinterpret_cast<const std::uint8_t*>(site) != 0xE8) {
 				logger::error("frame sync hook: +{:X} is not a call; not hooked (SMP cloth stays still while Delirium poses)", site - base);
 				return;
@@ -350,8 +361,8 @@ namespace
 		static void Install()
 		{
 			const auto base = REL::Module::get().base();
-			const auto site = REL::Relocation<std::uintptr_t>{ REL::RelocationID(38859, 39896) }.address() + REL::Relocate<std::size_t>(0x3DB, 0x2B6);
-			const auto want = REL::Relocation<std::uintptr_t>{ REL::RelocationID(36681, 37689) }.address();
+			const auto site = REL::Relocation<std::uintptr_t>{ REL::VariantID(38859, 39896, 0x686D80) }.address() + REL::Relocate<std::size_t>(0x3DB, 0x2B6, 0x3E4);
+			const auto want = REL::Relocation<std::uintptr_t>{ REL::VariantID(36681, 37689, 0x600DF0) }.address();
 			const auto* p = reinterpret_cast<const std::uint8_t*>(site);
 			if (p[0] != 0xE8 || site + 5 + *reinterpret_cast<const std::int32_t*>(p + 1) != want) {
 				logger::error("get-up hook: +{:X} is not the call to IsRagdollMovingSlowEnoughToGetUp; not hooked", site - base);
@@ -467,7 +478,7 @@ namespace
 			// mov rax, rsp; push rdi; push r12 (SE and AE)
 			static constexpr std::uint8_t kStart[]{ 0x48, 0x8B, 0xC4, 0x57, 0x41, 0x54 };
 			func = reinterpret_cast<decltype(func)>(
-				HookEntry(REL::Relocation<std::uintptr_t>{ REL::RelocationID(36415, 37409) }.address(), kStart, reinterpret_cast<void*>(&thunk), "bump"));
+				HookEntry(REL::Relocation<std::uintptr_t>{ REL::VariantID(36415, 37409, 0x5E4B70) }.address(), kStart, reinterpret_cast<void*>(&thunk), "bump"));
 		}
 	};
 
@@ -487,8 +498,9 @@ namespace
 		static void Install()
 		{
 			REL::Relocation<std::uintptr_t> vt{ RE::VTABLE_Character[0] };
-			func = vt.write_vfunc(0x10E, thunk);
-			logger::info("kill hook on Character's vtable (slot 10E)");
+			const auto slot = REL::Relocate<std::size_t>(0x10E, 0x10E, 0x110);  // VR has two extra Actor virtuals before it
+			func = vt.write_vfunc(slot, thunk);
+			logger::info("kill hook on Character's vtable (slot {:X})", slot);
 		}
 	};
 
@@ -557,6 +569,27 @@ namespace
 		switch (a_msg->type) {
 		case SKSE::MessagingInterface::kPostLoad:
 			menu::Register();
+			break;
+		case SKSE::MessagingInterface::kPostPostLoad:
+			{
+				// HIGGS and PLANCK hand out their APIs on request (their interface001 headers): the message carries a
+				// pointer they fill with a getter. Nothing answers outside VR or without the mod.
+				struct GetApi
+				{
+					void* (*getApiFunction)(unsigned int) = nullptr;
+				};
+				auto fetch = [](std::uint32_t a_type, const char* a_mod) -> void* {
+					GetApi m;
+					SKSE::GetMessagingInterface()->Dispatch(a_type, &m, sizeof(void*), a_mod);
+					return m.getApiFunction ? m.getApiFunction(1) : nullptr;
+				};
+				core::higgs = fetch(0xF9279A57, "HIGGS");
+				core::planck = fetch(0x92F38745, "PLANCK");
+				logger::info("HIGGS API {}, PLANCK API {}", core::higgs ? "found" : "not found", core::planck ? "found" : "not found");
+				if (core::Use c; c) {
+					c->vrMods(core::higgs, core::planck);
+				}
+			}
 			break;
 		case SKSE::MessagingInterface::kDataLoaded:
 			{

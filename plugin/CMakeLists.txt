@@ -52,7 +52,7 @@ find_path(SIMPLEINI_INCLUDE_DIRS "SimpleIni.h")
 # can be rebuilt and reloaded while the game runs (tools\hotreload.ps1).
 add_library(SkyrimDelirium SHARED src/host/main.cpp)
 add_library(SkyrimDeliriumCore SHARED
-	src/core/core.cpp src/core/engine.cpp src/core/hooks.cpp src/core/settings/table.cpp src/core/settings/load.cpp
+	src/core/core.cpp src/core/engine.cpp src/core/hooks.cpp src/core/vrmods.cpp src/core/settings/table.cpp src/core/settings/load.cpp
 	src/core/settings/live.cpp src/core/settings/save.cpp src/core/menu/menu.cpp src/core/menu/reactions.cpp
 	src/core/reactions/hits.cpp src/core/reactions/rules.cpp src/core/reactions/react.cpp src/core/reactions/dying.cpp src/core/reactions/bodies.cpp
 	src/core/reactions/falls.cpp

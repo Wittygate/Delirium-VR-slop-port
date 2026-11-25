@@ -21,6 +21,7 @@ namespace delirium::world
 		std::mutex                                   g_lock;       // g_added
 		std::vector<RE::ActorHandle>                 g_added;      // whose ragdoll we put in the world
 		std::optional<std::array<std::uint64_t, 64>> g_filterWas;  // Skyrim's layer rows, before ours (main thread)
+		std::array<std::uint64_t, 64>                g_filterOurs{};  // the bits we set that were not set before
 		std::atomic<bool>                            g_changed{ false };
 
 		// every graph of hers with a ragdoll, under the manager's update lock; false: none
@@ -222,6 +223,9 @@ namespace delirium::world
 			Allow(*f, a, Layer::kBipedNoCC);
 			Allow(*f, a, Layer::kDeadBip);
 		}
+		for (std::size_t i = 0; i < 64; ++i) {
+			g_filterOurs[i] = f->layerBitfields[i] & ~(*g_filterWas)[i];
+		}
 		g_changed = true;
 		logger::info("world: biped bodies meet each other; Biped's row {:016X} (was {:016X})", f->layerBitfields[std::to_underlying(Layer::kBiped)],
 			(*g_filterWas)[std::to_underlying(Layer::kBiped)]);
@@ -236,8 +240,12 @@ namespace delirium::world
 	{
 		if (g_filterWas) {
 			if (auto* f = RE::bhkCollisionFilter::GetSingleton()) {
-				std::ranges::copy(*g_filterWas, std::begin(f->layerBitfields));
-				logger::info("world: filter as Skyrim had it");
+				// only our own bits go: other mods (HIGGS, PLANCK, Precision) may have changed rows since
+				for (std::size_t i = 0; i < 64; ++i) {
+					f->layerBitfields[i] &= ~g_filterOurs[i];
+				}
+				g_filterOurs = {};
+				logger::info("world: our collision filter bits taken out again");
 			}
 			g_filterWas.reset();
 		}

@@ -5,7 +5,7 @@
 // swapped while the game runs ("reload" in the command file). Bump kCoreApi when this struct changes.
 namespace delirium
 {
-	inline constexpr std::uint32_t kCoreApi = 7;
+	inline constexpr std::uint32_t kCoreApi = 8;
 
 	struct CoreApi
 	{
@@ -41,6 +41,9 @@ namespace delirium
 		// main thread, once a frame: right after the call where SMP (FSMP, HDT-SMP) writes its bones (AE 36564 + 0x9DC,
 		// chained after their hook), before the frame is drawn
 		void (*frameSync)();
+		// Skyrim VR: HIGGS's and PLANCK's mod APIs (IHiggsInterface001*, IPlanckInterface001*), null when absent. Called
+		// after init and again when the host fetches them (kPostPostLoad)
+		void (*vrMods)(void* a_higgs, void* a_planck);
 	};
 
 	using GetCoreApi = const CoreApi* (*)();

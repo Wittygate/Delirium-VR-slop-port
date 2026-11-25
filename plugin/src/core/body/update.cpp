@@ -257,6 +257,15 @@ namespace delirium
 				Release(i, "her 3D was replaced (a script: outfit, disable / enable, a scene)");
 				return;
 			}
+			if (vrmods::HiggsHolds(a_actor)) {
+				// the player's hand has her (HIGGS; PLANCK ragdolls her for it): the grab drives the body. Not skipped
+				// afterwards, so a body that is thrown is Delirium's again
+				const auto h = a.actor;
+				Release(i, "grabbed by HIGGS");
+				std::erase(skip_, h);
+				g_skip = static_cast<int>(skip_.size());
+				return;
+			}
 			if (a.death && !a_actor->IsDead()) {
 				Release(i, "alive again");
 				return;

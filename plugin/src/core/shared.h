@@ -6,6 +6,7 @@
 #include "vec_math.h"
 
 #include "body/collision.h"
+#include "vrmods.h"
 
 #include <RE/H/hkpLimitedHingeConstraintData.h>
 #include <RE/H/hkpRagdollConstraintData.h>
