@@ -1,7 +1,7 @@
 # Delirium VR slop port
 
 Unofficial Skyrim VR port of **[Skyrim Delirium](https://www.nexusmods.com/skyrimspecialedition/mods/196333)** 2.1.1 by
-[YoucefNabil](https://github.com/YoucefNabil/skyrim-delirium): physics-driven, Euphoria-style hit reactions. NPCs
+Mentally0Unstable ([source](https://github.com/YoucefNabil/skyrim-delirium)): physics-driven, Euphoria-style hit reactions. NPCs
 stumble and try to keep their footing, writhe in fire, get blown over by explosions and shouts, and die on their feet
 instead of playing canned animations.
 
@@ -16,7 +16,8 @@ fixing list.
 
 I tested it on a fresh save in the realm of Lorkhan, on a heavy modlist (modified Tahrovin). Not much in-game.
 
-**Please don't report bugs of this port to YoucefNabil.** He made the flatscreen mod and has nothing to do with this.
+**Please don't report bugs of this port to Mentally0Unstable or YoucefNabil.** They made the flatscreen mod and its
+physics, and have nothing to do with this port.
 
 ## Requirements
 
@@ -58,7 +59,8 @@ original (SE/AE) Skyrim Delirium next to it: it's not needed and it won't work.
 
 ## Credits
 
-- **YoucefNabil**: Skyrim Delirium, the whole mod. Big thank you to him.
+- **Mentally0Unstable**: Skyrim Delirium, the Skyrim mod itself. Big thank you to him.
+- **YoucefNabil**: the original Delirium physics. Big thank you to him too.
 - **PVCPC**: the Delirium physics engine (`delirium_physics.dll`, unchanged from 2.1.1).
 - **adamhynek**: HIGGS and PLANCK, whose open source made the VR addresses and compatibility possible.
 - **alandtse** and the CommonLibSSE-NG contributors, the SKSEVR team, meh321 (Address Library).
